@@ -11,6 +11,7 @@ import yfinance as yf
 from datetime import datetime
 import logging
 import uvicorn
+from curl_cffi import requests as cffi_requests
 
 # Configure logging
 logging.basicConfig(
@@ -18,6 +19,9 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
+
+# Create curl_cffi session for yfinance to avoid blocking
+cffi_session = cffi_requests.Session(impersonate="chrome")
 
 # Create FastAPI app
 app = FastAPI(
@@ -121,8 +125,8 @@ async def get_fundamentals(ticker: str):
     try:
         logger.info(f"Fetching fundamentals for {ticker}")
 
-        # Create ticker object
-        stock = yf.Ticker(ticker)
+        # Create ticker object with curl_cffi session
+        stock = yf.Ticker(ticker, session=cffi_session)
 
         # Get info
         info = stock.info
@@ -203,8 +207,8 @@ async def get_historical(
     try:
         logger.info(f"Fetching historical data for {ticker} (period={period}, interval={interval})")
 
-        # Create ticker object
-        stock = yf.Ticker(ticker)
+        # Create ticker object with curl_cffi session
+        stock = yf.Ticker(ticker, session=cffi_session)
 
         # Get historical data
         hist = stock.history(period=period, interval=interval)
@@ -255,8 +259,8 @@ async def get_quote(ticker: str):
     try:
         logger.info(f"Fetching quote for {ticker}")
 
-        # Create ticker object
-        stock = yf.Ticker(ticker)
+        # Create ticker object with curl_cffi session
+        stock = yf.Ticker(ticker, session=cffi_session)
 
         # Get latest data
         hist = stock.history(period='1d')
